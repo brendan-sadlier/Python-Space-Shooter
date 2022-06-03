@@ -7,6 +7,10 @@ WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))  # SET WINDOW RESOLUTION
 pygame.display.set_caption("Space Shooter")  # SET WINDOW TITLE
 
 WHITE = (255, 255, 255)  # RGB Code for White
+BLACK = (0, 0, 0)  # RGB Code for Black
+
+BORDER = pygame.Rect((WIDTH / 2) - 5, 0, 10, HEIGHT)
+
 FPS = 60  # Game FPS
 VELOCITY = 5
 SHIP_WIDTH, SHIP_HEIGHT = 55, 40  # Dimensions for Spaceship Sprites
@@ -22,6 +26,7 @@ BLUE_SHIP = pygame.transform.scale(BLUE_SHIP_IMG, (SHIP_WIDTH, SHIP_HEIGHT))  # 
 
 def draw_window(green, blue):
     WINDOW.fill(WHITE)  # Fill Screen With White Color
+    pygame.draw.rect(WINDOW, BLACK, BORDER)
     WINDOW.blit(GREEN_SHIP, (green.x, green.y))  # Used to show Green Spaceship on screen
     WINDOW.blit(BLUE_SHIP, (blue.x, blue.y))  # Used to show Blue Spaceship on screen
     pygame.display.update()  # Update Screen
@@ -29,25 +34,25 @@ def draw_window(green, blue):
 
 # HANDLE GREEN SPACESHIP MOVEMENT FROM PLAYER INPUT
 def green_movement_handler(keys_pressed, green):
-    if keys_pressed[pygame.K_a]:  # LEFT
+    if keys_pressed[pygame.K_a] and green.x - VELOCITY > -5:  # LEFT
         green.x -= VELOCITY
-    if keys_pressed[pygame.K_d]:  # RIGHT
+    if keys_pressed[pygame.K_d] and green.x - VELOCITY + green.width < BORDER.x-5:  # RIGHT
         green.x += VELOCITY
-    if keys_pressed[pygame.K_w]:  # UP
+    if keys_pressed[pygame.K_w] and green.y - VELOCITY > 0:  # UP
         green.y -= VELOCITY
-    if keys_pressed[pygame.K_s]:  # DOWN
+    if keys_pressed[pygame.K_s] and green.y - VELOCITY + green.height < HEIGHT-5:  # DOWN
         green.y += VELOCITY
 
 
 # HANDLE GREEN SPACESHIP MOVEMENT FROM PLAYER INPUT
 def blue_movement_handler(keys_pressed, blue):
-    if keys_pressed[pygame.K_LEFT]:  # LEFT
+    if keys_pressed[pygame.K_LEFT] and blue.x - VELOCITY > BORDER.x + BORDER.width-5:  # LEFT
         blue.x -= VELOCITY
-    if keys_pressed[pygame.K_RIGHT]:  # RIGHT
+    if keys_pressed[pygame.K_RIGHT] and blue.x - VELOCITY + blue.width < WIDTH-5:  # RIGHT
         blue.x += VELOCITY
-    if keys_pressed[pygame.K_UP]:  # UP
+    if keys_pressed[pygame.K_UP] and blue.y - VELOCITY > 0:  # UP
         blue.y -= VELOCITY
-    if keys_pressed[pygame.K_DOWN]:  # DOWN
+    if keys_pressed[pygame.K_DOWN] and blue.y - VELOCITY + blue.height < HEIGHT-5:  # DOWN
         blue.y += VELOCITY
 
 
