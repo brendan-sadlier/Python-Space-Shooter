@@ -8,36 +8,41 @@ pygame.display.set_caption("Space Shooter")  # SET WINDOW TITLE
 
 WHITE = (255, 255, 255)  # RGB Code for White
 BLACK = (0, 0, 0)  # RGB Code for Black
+GREEN = (110, 194, 54)  # RGB Code for Green Bullet
+BLUE = (53, 180, 235)  # RGB Code for Blue Bullet
 
-BORDER = pygame.Rect((WIDTH / 2) - 5, 0, 10, HEIGHT)
+BORDER = pygame.Rect((WIDTH // 2) - 5, 0, 10, HEIGHT)
 
 FPS = 60  # Game FPS
-VELOCITY = 5
-BULLET_VELOCITY = 7
-MAX_NUM_OF_BULLETS = 5
+VELOCITY = 5  # Speed of Spaceship
+BULLET_VELOCITY = 7  # Speed of Bullets
+MAX_NUM_OF_BULLETS = 5  # Max Number of Bullets available on screen at once
 SHIP_WIDTH, SHIP_HEIGHT = 55, 40  # Dimensions for Spaceship Sprites
-BULLET_WIDTH, BULLET_HEIGHT = 10, 5
+BULLET_WIDTH, BULLET_HEIGHT = 10, 5 # Dimensions for bullets
+
+GREEN_HIT = pygame.USEREVENT + 1
+BLUE_HIT = pygame.USEREVENT + 2
 
 GREEN_SHIP_IMG = pygame.transform.rotate(pygame.image.load(os.path.join('Assets', 'shipGreen.png')),
                                          270)  # IMPORT GREEN SPACESHIP IMAGE
 BLUE_SHIP_IMG = pygame.transform.rotate(pygame.image.load(os.path.join('Assets', 'shipBlue.png')),
                                         90)  # IMPORT BLUE SPACESHIP IMAGE
-GREEN_BULLET_IMG = pygame.transform.rotate(pygame.image.load(os.path.join('Assets', 'laserGreen.png')),
-                                           90)  # IMPORT GREEN SPACESHIP IMAGE
-BLUE_BULLET_IMG = pygame.transform.rotate(pygame.image.load(os.path.join('Assets', 'laserBlue.png')),
-                                          270)  # IMPORT BLUE SPACESHIP IMAGE
 
 GREEN_SHIP = pygame.transform.scale(GREEN_SHIP_IMG, (SHIP_WIDTH, SHIP_HEIGHT))  # RESCALE GREEN SPACESHIP IMAGE
 BLUE_SHIP = pygame.transform.scale(BLUE_SHIP_IMG, (SHIP_WIDTH, SHIP_HEIGHT))  # RESCALE BLUE SPACESHIP IMAGE
-GREEN_BULLET = pygame.transform.scale(GREEN_BULLET_IMG, (BULLET_WIDTH, BULLET_HEIGHT))
-BLUE_BULLET = pygame.transform.scale(BLUE_BULLET_IMG, (BULLET_WIDTH, BULLET_HEIGHT))
 
 
-def draw_window(green, blue):
+def draw_window(green, blue, green_bullets, blue_bullets):
     WINDOW.fill(WHITE)  # Fill Screen With White Color
     pygame.draw.rect(WINDOW, BLACK, BORDER)
     WINDOW.blit(GREEN_SHIP, (green.x, green.y))  # Used to show Green Spaceship on screen
     WINDOW.blit(BLUE_SHIP, (blue.x, blue.y))  # Used to show Blue Spaceship on screen
+
+    for bullet in green_bullets:
+        pygame.draw.rect(WINDOW, GREEN, bullet)
+    for bullet in blue_bullets:
+        pygame.draw.rect(WINDOW, BLUE, bullet)
+
     pygame.display.update()  # Update Screen
 
 
@@ -65,12 +70,28 @@ def blue_movement_handler(keys_pressed, blue):
         blue.y += VELOCITY
 
 
+def handle_bullets(green_bullets, blue_bullets, green, blue):
+    for bullet in green_bullets:
+        bullet.x += BULLET_VELOCITY
+        if blue.colliderect(bullet):
+            pygame.event.post(pygame.event.Event(BLUE_HIT))
+            green_bullets.remove(bullet)
+        elif bullet.x > WIDTH:
+            green_bullets.remove(bullet)
+
+    for bullet in blue_bullets:
+        bullet.x -= BULLET_VELOCITY
+        if green.colliderect(bullet):
+            pygame.event.post(pygame.event.Event(GREEN_HIT))
+            blue_bullets.remove(bullet)
+        elif bullet.x < 0:
+            blue_bullets.remove(bullet)
+
+
 # Main Function
 def main():
     green = pygame.Rect(100, 300, SHIP_WIDTH, SHIP_HEIGHT)
     blue = pygame.Rect(700, 300, SHIP_WIDTH, SHIP_HEIGHT)
-    green_bullet = pygame.Rect(green.x + green.width, green.y + green.height / 2 - 2, 10, 5)
-    blue_bullet = pygame.Rect(blue.x, blue.y + blue.height / 2 - 2, 10, 5)
 
     green_bullets = []
     blue_bullets = []
@@ -89,15 +110,19 @@ def main():
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LCTRL and len(green_bullets) < MAX_NUM_OF_BULLETS:
-                    green_bullets.append(green_bullet)
+                    bullet = pygame.Rect(green.x + green.width, green.y + green.height // 2 - 2, 10, 5)
+                    green_bullets.append(bullet)
                 if event.key == pygame.K_RCTRL and len(blue_bullets) < MAX_NUM_OF_BULLETS:
-                    blue_bullets.append(blue_bullet)
+                    bullet = pygame.Rect(blue.x, blue.y + blue.height // 2 - 2, 10, 5)
+                    blue_bullets.append(bullet)
 
         keys_pressed = pygame.key.get_pressed()
         green_movement_handler(keys_pressed, green)
         blue_movement_handler(keys_pressed, blue)
 
-        draw_window(green, blue)
+        handle_bullets(green_bullets, blue_bullets, green, blue)
+
+        draw_window(green, blue, green_bullets, blue_bullets)
 
     pygame.quit()
 
