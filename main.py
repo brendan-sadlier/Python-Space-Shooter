@@ -1,7 +1,8 @@
 import os
 import pygame
-pygame.font.init() # Initialise pygame fonts
 
+pygame.font.init()  # Initialise pygame fonts
+pygame.mixer.init()  # Initialise pygame sound effects handler
 
 WIDTH, HEIGHT = 900, 500  # WINDOW RESOLUTION
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))  # SET WINDOW RESOLUTION
@@ -12,10 +13,14 @@ BLACK = (0, 0, 0)  # RGB Code for Black
 GREEN = (110, 194, 54)  # RGB Code for Green Bullet
 BLUE = (53, 180, 235)  # RGB Code for Blue Bullet
 
-BORDER = pygame.Rect((WIDTH // 2) - 5, 0, 10, HEIGHT)
+BORDER = pygame.Rect((WIDTH // 2) - 5, 0, 10, HEIGHT)  # Create Window Divide
 
-HEALTH_FONT = pygame.font.SysFont('kenvector_future', 40)
-WINNER_FONT = pygame.font.SysFont('kenvector_future', 100)
+BULLET_HIT_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'sfx_hit.ogg'))  # BULLET HIT PLAYER SOUND EFFECT
+BULLET_FIRE_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'sfx_fire.ogg'))  # BULLET FIRED SOUND EFFECT
+GAME_END_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'sfx_game_over.ogg'))  # GAME OVER SOUND EFFECT
+
+HEALTH_FONT = pygame.font.SysFont('kenvector_future.ttf', 40)  # FONT FOR HEALTH DISPLAY
+WINNER_FONT = pygame.font.SysFont('kenvector_future.ttf', 100)  # FONT FOR WINNER DISPLAY
 
 FPS = 60  # Game FPS
 VELOCITY = 5  # Speed of Spaceship
@@ -35,27 +40,27 @@ BLUE_SHIP_IMG = pygame.transform.rotate(pygame.image.load(os.path.join('Assets',
 GREEN_SHIP = pygame.transform.scale(GREEN_SHIP_IMG, (SHIP_WIDTH, SHIP_HEIGHT))  # RESCALE GREEN SPACESHIP IMAGE
 BLUE_SHIP = pygame.transform.scale(BLUE_SHIP_IMG, (SHIP_WIDTH, SHIP_HEIGHT))  # RESCALE BLUE SPACESHIP IMAGE
 
-BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'background.png')), (WIDTH, HEIGHT))
+BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'background.png')),
+                                    (WIDTH, HEIGHT))  # IMPORT BACKGROUND IMAGE
 
 
+# DRAW GAME ASSETS IN WINDOW
 def draw_window(green, blue, green_bullets, blue_bullets, green_health, blue_health):
-    WINDOW.blit(BACKGROUND, (0, 0))
-    pygame.draw.rect(WINDOW, BLACK, BORDER)
+    WINDOW.blit(BACKGROUND, (0, 0))  # DRAW BACKGROUND IMAGE
+    pygame.draw.rect(WINDOW, BLACK, BORDER)  # DRAW BORDER
 
     green_health_text = HEALTH_FONT.render("Health: " + str(green_health), 1, WHITE)
     blue_health_text = HEALTH_FONT.render("Health: " + str(blue_health), 1, WHITE)
-    WINDOW.blit(green_health_text, (WIDTH-green_health_text.get_width() - 10, 10))
-    WINDOW.blit(blue_health_text, (10, 10))
+    WINDOW.blit(green_health_text, (WIDTH - green_health_text.get_width() - 10, 10))  # DISPLAY GREEN HEALTH
+    WINDOW.blit(blue_health_text, (10, 10))  # DISPLAY BLUE HEALTH
 
     WINDOW.blit(GREEN_SHIP, (green.x, green.y))  # Used to show Green Spaceship on screen
     WINDOW.blit(BLUE_SHIP, (blue.x, blue.y))  # Used to show Blue Spaceship on screen
 
-
-
     for bullet in green_bullets:
-        pygame.draw.rect(WINDOW, GREEN, bullet)
+        pygame.draw.rect(WINDOW, GREEN, bullet)  # DRAW GREEN BULLETS
     for bullet in blue_bullets:
-        pygame.draw.rect(WINDOW, BLUE, bullet)
+        pygame.draw.rect(WINDOW, BLUE, bullet)  # DRAW BLUE BULLETS
 
     pygame.display.update()  # Update Screen
 
@@ -84,6 +89,7 @@ def blue_movement_handler(keys_pressed, blue):
         blue.y += VELOCITY
 
 
+# HANDLE BULLETS FIRED
 def handle_bullets(green_bullets, blue_bullets, green, blue):
     for bullet in green_bullets:
         bullet.x += BULLET_VELOCITY
@@ -101,15 +107,19 @@ def handle_bullets(green_bullets, blue_bullets, green, blue):
         elif bullet.x < 0:
             blue_bullets.remove(bullet)
 
-def draw_winner (text):
+
+# DISPLAY WINNER TEXT
+def draw_winner(text):
     winner_text = WINNER_FONT.render(text, 1, WHITE)
-    WINDOW.blit(winner_text, (WIDTH//2 - winner_text.get_width()/2, HEIGHT//2 - winner_text.get_height()/2))
+    WINDOW.blit(winner_text, (WIDTH // 2 - winner_text.get_width() / 2, HEIGHT // 2 - winner_text.get_height() / 2))
     pygame.display.update()
+    GAME_END_SOUND.play()
     pygame.time.delay(5000)
+
 
 # Main Function
 def main():
-    green = pygame.Rect(100, 300, SHIP_WIDTH, SHIP_HEIGHT)
+    green = pygame.Rect(100, 100, SHIP_WIDTH, SHIP_HEIGHT)
     blue = pygame.Rect(700, 300, SHIP_WIDTH, SHIP_HEIGHT)
 
     green_bullets = []
@@ -135,15 +145,19 @@ def main():
                 if event.key == pygame.K_LCTRL and len(green_bullets) < MAX_NUM_OF_BULLETS:
                     bullet = pygame.Rect(green.x + green.width, green.y + green.height // 2 - 2, 10, 5)
                     green_bullets.append(bullet)
+                    BULLET_FIRE_SOUND.play()
                 if event.key == pygame.K_RCTRL and len(blue_bullets) < MAX_NUM_OF_BULLETS:
                     bullet = pygame.Rect(blue.x, blue.y + blue.height // 2 - 2, 10, 5)
                     blue_bullets.append(bullet)
+                    BULLET_FIRE_SOUND.play()
 
             if event.type == GREEN_HIT:
                 blue_health -= 1
+                BULLET_HIT_SOUND.play()
 
             if event.type == BLUE_HIT:
                 green_health -= 1
+                BULLET_HIT_SOUND.play()
 
         winner_text = ""
         if green_health < 0:
