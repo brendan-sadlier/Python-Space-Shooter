@@ -1,6 +1,7 @@
 import os
-
 import pygame
+pygame.font.init() # Initialise pygame fonts
+
 
 WIDTH, HEIGHT = 900, 500  # WINDOW RESOLUTION
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))  # SET WINDOW RESOLUTION
@@ -13,12 +14,14 @@ BLUE = (53, 180, 235)  # RGB Code for Blue Bullet
 
 BORDER = pygame.Rect((WIDTH // 2) - 5, 0, 10, HEIGHT)
 
+HEALTH_FONT = pygame.font.SysFont('kenvector_future', 40)
+
 FPS = 60  # Game FPS
 VELOCITY = 5  # Speed of Spaceship
 BULLET_VELOCITY = 7  # Speed of Bullets
 MAX_NUM_OF_BULLETS = 5  # Max Number of Bullets available on screen at once
 SHIP_WIDTH, SHIP_HEIGHT = 55, 40  # Dimensions for Spaceship Sprites
-BULLET_WIDTH, BULLET_HEIGHT = 10, 5 # Dimensions for bullets
+BULLET_WIDTH, BULLET_HEIGHT = 10, 5  # Dimensions for bullets
 
 GREEN_HIT = pygame.USEREVENT + 1
 BLUE_HIT = pygame.USEREVENT + 2
@@ -31,12 +34,22 @@ BLUE_SHIP_IMG = pygame.transform.rotate(pygame.image.load(os.path.join('Assets',
 GREEN_SHIP = pygame.transform.scale(GREEN_SHIP_IMG, (SHIP_WIDTH, SHIP_HEIGHT))  # RESCALE GREEN SPACESHIP IMAGE
 BLUE_SHIP = pygame.transform.scale(BLUE_SHIP_IMG, (SHIP_WIDTH, SHIP_HEIGHT))  # RESCALE BLUE SPACESHIP IMAGE
 
+BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'background.png')), (WIDTH, HEIGHT))
 
-def draw_window(green, blue, green_bullets, blue_bullets):
-    WINDOW.fill(WHITE)  # Fill Screen With White Color
+
+def draw_window(green, blue, green_bullets, blue_bullets, green_health, blue_health):
+    WINDOW.blit(BACKGROUND, (0, 0))
     pygame.draw.rect(WINDOW, BLACK, BORDER)
+
+    green_health_text = HEALTH_FONT.render("Health: " + str(green_health), 1, WHITE)
+    blue_health_text = HEALTH_FONT.render("Health: " + str(blue_health), 1, WHITE)
+    WINDOW.blit(green_health_text, (WIDTH-green_health_text.get_width() - 10, 10))
+    WINDOW.blit(blue_health_text, (10, 10))
+
     WINDOW.blit(GREEN_SHIP, (green.x, green.y))  # Used to show Green Spaceship on screen
     WINDOW.blit(BLUE_SHIP, (blue.x, blue.y))  # Used to show Blue Spaceship on screen
+
+
 
     for bullet in green_bullets:
         pygame.draw.rect(WINDOW, GREEN, bullet)
@@ -96,6 +109,9 @@ def main():
     green_bullets = []
     blue_bullets = []
 
+    green_health = 10
+    blue_health = 10
+
     clock = pygame.time.Clock()
     run = True
     while run:
@@ -116,13 +132,29 @@ def main():
                     bullet = pygame.Rect(blue.x, blue.y + blue.height // 2 - 2, 10, 5)
                     blue_bullets.append(bullet)
 
+            if event.type == GREEN_HIT:
+                blue_health -= 1
+
+            if event.type == BLUE_HIT:
+                green_health -= 1
+
+        winner_text = ""
+        if green_health <= 0:
+            winner_text = "Green Wins"
+
+        if blue_health <= 0:
+            winner_text = "Blue Wins"
+
+        if winner_text != "":
+            pass  # Someone has won
+
         keys_pressed = pygame.key.get_pressed()
         green_movement_handler(keys_pressed, green)
         blue_movement_handler(keys_pressed, blue)
 
         handle_bullets(green_bullets, blue_bullets, green, blue)
 
-        draw_window(green, blue, green_bullets, blue_bullets)
+        draw_window(green, blue, green_bullets, blue_bullets, green_health, blue_health)
 
     pygame.quit()
 
