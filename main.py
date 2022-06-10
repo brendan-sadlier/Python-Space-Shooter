@@ -15,6 +15,7 @@ BLUE = (53, 180, 235)  # RGB Code for Blue Bullet
 BORDER = pygame.Rect((WIDTH // 2) - 5, 0, 10, HEIGHT)
 
 HEALTH_FONT = pygame.font.SysFont('kenvector_future', 40)
+WINNER_FONT = pygame.font.SysFont('kenvector_future', 100)
 
 FPS = 60  # Game FPS
 VELOCITY = 5  # Speed of Spaceship
@@ -100,6 +101,11 @@ def handle_bullets(green_bullets, blue_bullets, green, blue):
         elif bullet.x < 0:
             blue_bullets.remove(bullet)
 
+def draw_winner (text):
+    winner_text = WINNER_FONT.render(text, 1, WHITE)
+    WINDOW.blit(winner_text, (WIDTH//2 - winner_text.get_width()/2, HEIGHT//2 - winner_text.get_height()/2))
+    pygame.display.update()
+    pygame.time.delay(5000)
 
 # Main Function
 def main():
@@ -123,6 +129,7 @@ def main():
             # Check if game is quit
             if event.type == pygame.QUIT:
                 run = False
+                pygame.quit()
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LCTRL and len(green_bullets) < MAX_NUM_OF_BULLETS:
@@ -139,14 +146,15 @@ def main():
                 green_health -= 1
 
         winner_text = ""
-        if green_health <= 0:
+        if green_health < 0:
             winner_text = "Green Wins"
 
-        if blue_health <= 0:
+        if blue_health < 0:
             winner_text = "Blue Wins"
 
         if winner_text != "":
-            pass  # Someone has won
+            draw_winner(winner_text)
+            break
 
         keys_pressed = pygame.key.get_pressed()
         green_movement_handler(keys_pressed, green)
@@ -156,7 +164,7 @@ def main():
 
         draw_window(green, blue, green_bullets, blue_bullets, green_health, blue_health)
 
-    pygame.quit()
+    main()
 
 
 if __name__ == "__main__":
